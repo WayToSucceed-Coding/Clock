@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     // Game variables
-    const totalChallenges = 10;
+    const totalChallenges = 5;
     let currentChallenge = 0;
     let correctAnswers = 0;
     let challenges = [];
@@ -564,8 +564,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Show results
     function showResults() {
-        gameScreen.classList.add("hidden");
-        resultsScreen.classList.remove("hidden");
+       gameScreen.style.display = "none";
+       resultsScreen.style.display = "block";
 
         finalScoreElement.textContent = `Your score: ${correctAnswers} / ${totalChallenges}`;
 
@@ -632,8 +632,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     playAgainBtn.addEventListener("click", function () {
-        resultsScreen.classList.add("hidden");
-        gameScreen.classList.remove("hidden");
+        resultsScreen.style.display = "none";
+        gameScreen.style.display = "block";
 
         // Reset game state
         currentChallenge = 0;
