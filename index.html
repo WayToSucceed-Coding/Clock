@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.4/lottie.min.js"></script>
+
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-text">Loading Game...</div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <div class="container">
+      <h1>Can you show correct time on the clock?</h1>
+
+      <div class="start-screen">
+        <p>
+          Welcome to Game! Learn how to read analog clocks in a
+          fun way.
+        </p>
+
+        <div class="instructions">
+          <p><strong>How to play:</strong></p>
+          <ul>
+            <li>You'll be shown a time in digital format (like 3:30)</li>
+            <li>
+              Drag the hour and minute hands to set the correct time on the
+              clock
+            </li>
+            <li>Click "Check Answer" when you're ready</li>
+            <li>Complete all 10 challenges to see your final score</li>
+          </ul>
+        </div>
+
+        <button class="button" id="start-game">Start Game</button>
+      </div>
+
+      <div class="game-screen">
+        <div class="target-time" id="target-time">Set the clock to: 3:30</div>
+
+        <div class="clock-container">
+          <div class="clock">
+            <div class="hour-marks" id="hour-marks"></div>
+            <div class="clock-center"></div>
+            <div class="hand hour-hand" id="hour-hand"></div>
+            <div class="hand minute-hand" id="minute-hand"></div>
+          </div>
+        </div>
+
+        <div class="progress" id="progress"></div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <button class="button" id="check-answer">Check Answer</button>
+        <button class="button" id="next-challenge" style="display: none">
+          Next Challenge
+        </button>
+  
+        <div id="lottie-happy-animation" ></div>
+        <div id="lottie-sad-animation" ></div>
+        <div id="lottie-celebration-animation" ></div>
+      </div>
+
+      <div class="results hidden" id="results">
+        <div class="game-over">Game Over!</div>
+        <div class="score" id="final-score">Your score: 0 / 10</div>
+        <div id="completion-message"></div>
+        <button class="button play-again" id="play-again">Play Again</button>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
