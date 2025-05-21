@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const completionMessage = document.getElementById("completion-message");
     const confettiContainer = document.getElementById("confetti-container");
     const celebration = document.querySelector(".animation");
+    const clock=document.querySelector('.clock')
 
     // Fix the animation containers
     const happyAnimationContainer = document.getElementById("lottie-happy-animation");
@@ -279,61 +280,166 @@ document.addEventListener("DOMContentLoaded", function () {
         nextChallengeBtn.style.display = "none";
     }
 
-    // Make the hands draggable
+    // Make the hands draggable - IMPROVED TOUCH CONTROLS
     let isDragging = false;
     let currentHand = null;
     let startAngle = 0;
     let currentAngle = 0;
+    let lastValidTouch = null;
 
-    // Helper function to calculate angle from mouse position
-    function calculateAngle(element, event) {
-        const rect = element.parentElement.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        return (
-            Math.atan2(event.clientY - centerY, event.clientX - centerX) *
-            (180 / Math.PI) +
-            90
-        );
+    // Utility to extract clientX/clientY from mouse or touch events
+    function getEventCoords(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+            // For touchend events, use changedTouches
+            return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        } else {
+            return { x: e.clientX, y: e.clientY };
+        }
     }
 
-    // Add event listeners to hands
+    // Modified calculateAngle to accept touch/mouse event
+    function calculateAngle(hand, e) {
+        const { x, y } = getEventCoords(e);
+        
+        // Get the clock container for proper center calculation
+        const clockContainer = hand.closest('.clock') || hand.parentElement;
+        const rect = clockContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        return Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+    }
+
+    // Enhanced drag start function
+    function startDragging(e, hand) {
+        e.preventDefault(); // Prevent default immediately
+        e.stopPropagation(); // Stop event bubbling
+        
+        isDragging = true;
+        currentHand = hand;
+        startAngle = calculateAngle(hand, e);
+        lastValidTouch = getEventCoords(e);
+
+        // Get current rotation
+        const style = window.getComputedStyle(hand);
+        const transform = style.getPropertyValue("transform");
+        const matrix = new DOMMatrix(transform);
+        const currentRotation = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+        currentAngle = currentRotation;
+
+        // Add active styling to show hand is being dragged
+        hand.style.cursor = 'grabbing';
+        hand.style.transform = `rotate(${currentAngle}deg) scale(1.05)`;
+        
+        // Disable text selection and scrolling during drag
+        document.body.style.userSelect = 'none';
+        document.body.style.touchAction = 'none';
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Enhanced drag handling
+    function handleDragging(e) {
+        if (!isDragging || !currentHand) return;
+        
+        e.preventDefault(); // Prevent scrolling
+        e.stopPropagation();
+        
+        // For touch events, ensure we have a valid touch point
+        const coords = getEventCoords(e);
+        if (!coords.x && !coords.y && lastValidTouch) {
+            // Use last valid touch if current is invalid
+            coords.x = lastValidTouch.x;
+            coords.y = lastValidTouch.y;
+        } else {
+            lastValidTouch = coords;
+        }
+
+        const newAngle = calculateAngle(currentHand, e);
+        let angleDiff = newAngle - startAngle;
+
+        // Handle angle wrap-around for smoother rotation
+        if (angleDiff > 180) {
+            angleDiff -= 360;
+        } else if (angleDiff < -180) {
+            angleDiff += 360;
+        }
+
+        // Apply rotation with scaling for visual feedback
+        currentAngle += angleDiff;
+        currentHand.style.transform = `rotate(${currentAngle}deg) scale(1.05)`;
+
+        startAngle = newAngle;
+    }
+
+    // Enhanced drag stop function
+    function stopDragging(e) {
+        if (!isDragging || !currentHand) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        isDragging = false;
+        
+        // Remove visual feedback
+        currentHand.style.cursor = 'grab';
+        currentHand.style.transform = `rotate(${currentAngle}deg) scale(1)`;
+        
+        currentHand = null;
+        lastValidTouch = null;
+        
+        // Re-enable text selection and scrolling
+        document.body.style.userSelect = '';
+        document.body.style.touchAction = '';
+        document.body.style.overflow = '';
+    }
+
+    // Add event listeners to hands with improved touch handling
     [hourHand, minuteHand].forEach((hand) => {
+        // Improve hand styling for better touch feedback
+        hand.style.cursor = 'grab';
+        hand.style.transition = 'transform 0.1s ease-out';
+        
+        // Mouse events
         hand.addEventListener("mousedown", function (e) {
-            isDragging = true;
-            currentHand = hand;
-            startAngle = calculateAngle(hand, e);
+            startDragging(e, hand);
+        });
 
-            // Get current rotation
-            const style = window.getComputedStyle(hand);
-            const transform = style.getPropertyValue("transform");
-            const matrix = new DOMMatrix(transform);
-            const currentRotation =
-                Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+        // Touch events with passive: false to allow preventDefault
+        hand.addEventListener("touchstart", function (e) {
+            startDragging(e, hand);
+        }, { passive: false });
+    });
 
-            currentAngle = currentRotation;
+    // Global event listeners for drag handling
+    // Mouse events
+    document.addEventListener("mousemove", handleDragging);
+    document.addEventListener("mouseup", stopDragging);
 
+    // Touch events with passive: false to prevent scrolling
+    document.addEventListener("touchmove", handleDragging, { passive: false });
+    document.addEventListener("touchend", stopDragging, { passive: false });
+    document.addEventListener("touchcancel", stopDragging, { passive: false });
+
+    // Prevent context menu on long press for hands
+    [hourHand, minuteHand].forEach((hand) => {
+        hand.addEventListener("contextmenu", function(e) {
             e.preventDefault();
         });
     });
 
-    document.addEventListener("mousemove", function (e) {
-        if (isDragging && currentHand) {
-            const newAngle = calculateAngle(currentHand, e);
-            let angleDiff = newAngle - startAngle;
-
-            // Apply the rotation
-            currentAngle += angleDiff;
-            currentHand.style.transform = `rotate(${currentAngle}deg)`;
-
-            startAngle = newAngle;
-        }
+    // Additional touch improvements - prevent zoom and other gestures
+    document.addEventListener('gesturestart', function(e) {
+        e.preventDefault();
     });
 
-    document.addEventListener("mouseup", function () {
-        isDragging = false;
-        currentHand = null;
+    document.addEventListener('gesturechange', function(e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('gestureend', function(e) {
+        e.preventDefault();
     });
 
     // Snap hands to nearest valid position
@@ -366,7 +472,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Create shake animation on the clock
     function shakeClock() {
-        const clock = document.querySelector(".clock");
+      
         clock.classList.add("shake");
 
         // Remove the class after animation completes
@@ -376,7 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Show feedback overlay
-    function showFeedback(message, isCorrect,showCorrectAns=false) {
+    function showFeedback(message, isCorrect, showCorrectAns = false) {
         feedbackElement.textContent = message;
 
         // Set color based on correctness
@@ -384,10 +490,10 @@ document.addEventListener("DOMContentLoaded", function () {
             feedbackElement.style.backgroundColor = "rgba(34, 197, 94, 0.9)"; // Green background for correct
             feedbackElement.style.color = "white";
         }
-        else if(showCorrectAns){
-            feedbackElement.style.backgroundColor = "rgba(58, 110, 208, 0.9)"; // Green background for correct
+        else if (showCorrectAns) {
+            feedbackElement.style.backgroundColor = "rgba(58, 110, 208, 0.9)"; // Blue background for correct answer display
             feedbackElement.style.color = "white";
-        } 
+        }
         else {
             feedbackElement.style.backgroundColor = "rgba(239, 68, 68, 0.9)"; // Red background for incorrect
             feedbackElement.style.color = "white";
@@ -439,7 +545,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentTargetHour,
                 currentTargetMinute
             )}.`, true);
-
+            
+            clock.style.display='none'
             correctAnswers++;
             happyAnimationContainer.style.display = "block";
             happyAnimation.stop();
@@ -449,6 +556,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "complete",
                 function () {
                     happyAnimationContainer.style.display = "none";
+                    clock.style.display='block';
 
                     // Only enable next challenge button after animation completes
                     if (currentChallenge < totalChallenges - 1) {
@@ -462,14 +570,14 @@ document.addEventListener("DOMContentLoaded", function () {
             );
         } else {
             showFeedback("Oops! You got it wrong.", false);
-
+            clock.style.display='none'
             sadAnimationContainer.style.display = "block";
             sadAnimation.stop();
             sadAnimation.goToAndPlay(0, true);
 
             sadAnimation.addEventListener("complete", function () {
                 sadAnimationContainer.style.display = "none";
-
+                clock.style.display='block';    
                 // Begin shake animation
                 shakeClock();
 
@@ -486,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Update feedback to show correct answer message
                     setTimeout(() => {
-                        showFeedback(`This is the correct answer`, false,true);
+                        showFeedback(`This is the correct answer`, false, true);
 
                         // Wait for the user to see the correct answer before allowing to continue
                         setTimeout(() => {
@@ -503,8 +611,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 }, 700); // Start after shake animation completes
 
             })
-
-
         }
 
         // Function to animate a hand to the correct position
@@ -561,11 +667,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Note: Button display and next challenge logic is now handled in the animation complete handlers above
     }
 
-
     // Show results
     function showResults() {
-       gameScreen.style.display = "none";
-       resultsScreen.style.display = "block";
+        gameScreen.style.display = "none";
+        resultsScreen.style.display = "block";
 
         finalScoreElement.textContent = `Your score: ${correctAnswers} / ${totalChallenges}`;
 
