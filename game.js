@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const completionMessage = document.getElementById("completion-message");
     const confettiContainer = document.getElementById("confetti-container");
     const celebration = document.querySelector(".animation");
-    const clock=document.querySelector('.clock')
+    const clock = document.querySelector('.clock');
 
     // Fix the animation containers
     const happyAnimationContainer = document.getElementById("lottie-happy-animation");
@@ -32,55 +32,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const celebrationAnimationContainer = document.getElementById("lottie-celebration-animation");
 
     // Make sure these containers are properly styled
-    [happyAnimationContainer, sadAnimationContainer, celebrationAnimationContainer].forEach(container => {
-        if (container) {
-            container.style.position = "fixed";
-            container.style.top = "50%";
-            container.style.left = "50%";
-            container.style.transform = "translate(-50%, -50%)";
-            container.style.width = "300px";
-            container.style.height = "300px";
-            container.style.zIndex = "1000";
-            container.style.pointerEvents = "none";
-            container.style.display = "none";
-        }
-    });
+    happyAnimationContainer.classList.add('lottie-animation-container');
+    sadAnimationContainer.classList.add('lottie-animation-container');
+    feedbackElement.classList.add('feedback');
 
-    // Style feedback as overlay - THIS IS THE KEY CHANGE
-    if (feedbackElement) {
-        feedbackElement.style.position = "absolute";
-        feedbackElement.style.top = "90%"; // Position below the clock
-        feedbackElement.style.left = "50%";
-        feedbackElement.style.transform = "translate(-50%, -50%)";
-        feedbackElement.style.zIndex = "999";
-        feedbackElement.style.padding = "15px 25px";
-        feedbackElement.style.borderRadius = "8px";
-        feedbackElement.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
-        feedbackElement.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-        feedbackElement.style.fontWeight = "bold";
-        feedbackElement.style.fontSize = "1.2rem";
-        feedbackElement.style.textAlign = "center";
-        feedbackElement.style.pointerEvents = "none";
-        feedbackElement.style.opacity = "0";
-        feedbackElement.style.transition = "opacity 0.3s ease";
-        feedbackElement.style.maxWidth = "80%"; // Ensure it's not too wide
-        feedbackElement.style.display = "flex";
-        feedbackElement.style.alignItems = "center";
-        feedbackElement.style.justifyContent = "center";
-    }
-
-    // Create custom emoji style for the feedback
-    const style = document.createElement('style');
-    style.textContent = `
-        .feedback-emoji {
-            font-size: 1.5em;
-            margin-right: 10px;
-            display: inline-block;
-        }
-    `;
-    document.head.appendChild(style);
-
-    //Loading Animation
+    // Loading Animation
     var happyAnimation = lottie.loadAnimation({
         container: document.getElementById("lottie-happy-animation"),
         renderer: "svg",
@@ -157,91 +113,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return `${hour}:${minute.toString().padStart(2, "0")}`;
     }
 
-    // Create confetti
-    function createConfetti() {
-        confettiContainer.innerHTML = "";
-        const colors = [
-            "#6366f1",
-            "#f59e0b",
-            "#10b981",
-            "#ef4444",
-            "#8b5cf6",
-            "#ec4899",
-        ];
-        const shapes = ["square", "circle"];
-
-        for (let i = 0; i < 100; i++) {
-            const confetti = document.createElement("div");
-            confetti.className = "confetti";
-
-            // Random position, color, rotation, shape
-            const left = Math.random() * 100;
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
-            const size = Math.random() * 10 + 5;
-            const duration = Math.random() * 3 + 2;
-            const delay = Math.random() * 0.5;
-
-            confetti.style.left = `${left}%`;
-            confetti.style.top = "-10px";
-            confetti.style.backgroundColor = color;
-            confetti.style.width = `${size}px`;
-            confetti.style.height = `${size}px`;
-            confetti.style.borderRadius = shape === "circle" ? "50%" : "0";
-            confetti.style.opacity = "0";
-
-            // Animation
-            confetti.style.animation = `
-                    fadeIn 0.3s ease-out ${delay}s forwards,
-                    fall ${duration}s ease-in ${delay}s forwards,
-                    spin ${duration * 0.5}s linear ${delay}s infinite
-                `;
-
-            // Add keyframes for each confetti piece
-            const styleSheet = document.styleSheets[0];
-            const fallDistance = Math.random() * 100 + 100;
-            const swayAmount = Math.random() * 40 - 20;
-
-            const fallKeyframes = `
-                    @keyframes fall {
-                        to {
-                            transform: translateY(${fallDistance}vh) translateX(${swayAmount}px);
-                            opacity: 0;
-                        }
-                    }
-                `;
-
-            const spinKeyframes = `
-                    @keyframes spin {
-                        to {
-                            transform: rotate(${Math.random() < 0.5 ? 360 : -360
-                }deg);
-                        }
-                    }
-                `;
-
-            try {
-                styleSheet.insertRule(fallKeyframes, styleSheet.cssRules.length);
-                styleSheet.insertRule(spinKeyframes, styleSheet.cssRules.length);
-            } catch (e) {
-                // In case of error with inserting rules
-            }
-
-            confettiContainer.appendChild(confetti);
-        }
-
-        // Clean up confetti after animation
-        setTimeout(() => {
-            confettiContainer.innerHTML = "";
-        }, 5000);
-    }
 
     // Set up challenge
     function setupChallenge() {
         // Reset feedback
         feedbackElement.className = "feedback";
         feedbackElement.textContent = "";
-        feedbackElement.style.opacity = "0"; // Hide feedback
+        feedbackElement.style.opacity = "0";
 
         // Get current challenge
         const challenge = challenges[currentChallenge];
@@ -280,262 +158,248 @@ document.addEventListener("DOMContentLoaded", function () {
         nextChallengeBtn.style.display = "none";
     }
 
-    // Make the hands draggable - IMPROVED TOUCH CONTROLS
+    // ENHANCED DRAGGING SYSTEM
     let isDragging = false;
     let currentHand = null;
-    let startAngle = 0;
-    let currentAngle = 0;
-    let lastValidTouch = null;
+    let dragStartAngle = 0;
+    let handStartAngle = 0;
+    let lastAngle = 0;
+    let animationFrame = null;
 
-    // Utility to extract clientX/clientY from mouse or touch events
+    // Improved coordinate extraction
     function getEventCoords(e) {
         if (e.touches && e.touches.length > 0) {
             return { x: e.touches[0].clientX, y: e.touches[0].clientY };
         } else if (e.changedTouches && e.changedTouches.length > 0) {
-            // For touchend events, use changedTouches
             return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
         } else {
             return { x: e.clientX, y: e.clientY };
         }
     }
 
-    // Modified calculateAngle to accept touch/mouse event
+    // Enhanced angle calculation with better precision
     function calculateAngle(hand, e) {
         const { x, y } = getEventCoords(e);
-        
-        // Get the clock container for proper center calculation
         const clockContainer = hand.closest('.clock') || hand.parentElement;
         const rect = clockContainer.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
-        return Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+
+        const angle = Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+        return (angle + 360) % 360; // Normalize to 0-360
     }
 
-    // Enhanced drag start function
-    function startDragging(e, hand) {
-        e.preventDefault(); // Prevent default immediately
-        e.stopPropagation(); // Stop event bubbling
-        
-        isDragging = true;
-        currentHand = hand;
-        startAngle = calculateAngle(hand, e);
-        lastValidTouch = getEventCoords(e);
-
-        // Get current rotation
+    // Get current hand rotation
+    function getCurrentRotation(hand) {
         const style = window.getComputedStyle(hand);
         const transform = style.getPropertyValue("transform");
         const matrix = new DOMMatrix(transform);
-        const currentRotation = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
-        currentAngle = currentRotation;
-
-        // Add active styling to show hand is being dragged
-        hand.style.cursor = 'grabbing';
-        hand.style.transform = `rotate(${currentAngle}deg) scale(1.05)`;
-        
-        // Disable text selection and scrolling during drag
-        document.body.style.userSelect = 'none';
-        document.body.style.touchAction = 'none';
-        document.body.style.overflow = 'hidden';
+        const angle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+        return (angle + 360) % 360; // Normalize to 0-360
     }
 
-    // Enhanced drag handling
-    function handleDragging(e) {
-        if (!isDragging || !currentHand) return;
-        
-        e.preventDefault(); // Prevent scrolling
-        e.stopPropagation();
-        
-        // For touch events, ensure we have a valid touch point
-        const coords = getEventCoords(e);
-        if (!coords.x && !coords.y && lastValidTouch) {
-            // Use last valid touch if current is invalid
-            coords.x = lastValidTouch.x;
-            coords.y = lastValidTouch.y;
-        } else {
-            lastValidTouch = coords;
-        }
-
-        const newAngle = calculateAngle(currentHand, e);
-        let angleDiff = newAngle - startAngle;
-
-        // Handle angle wrap-around for smoother rotation
-        if (angleDiff > 180) {
-            angleDiff -= 360;
-        } else if (angleDiff < -180) {
-            angleDiff += 360;
-        }
-
-        // Apply rotation with scaling for visual feedback
-        currentAngle += angleDiff;
-        currentHand.style.transform = `rotate(${currentAngle}deg) scale(1.05)`;
-
-        startAngle = newAngle;
+    // Smooth angle difference calculation
+    function getAngleDifference(from, to) {
+        let diff = to - from;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        return diff;
     }
 
-    // Enhanced drag stop function
-    function stopDragging(e) {
-        if (!isDragging || !currentHand) return;
-        
+    // Enhanced drag start
+    function startDragging(e, hand) {
         e.preventDefault();
         e.stopPropagation();
-        
-        isDragging = false;
-        
-        // Remove visual feedback
-        currentHand.style.cursor = 'grab';
-        currentHand.style.transform = `rotate(${currentAngle}deg) scale(1)`;
-        
-        currentHand = null;
-        lastValidTouch = null;
-        
-        // Re-enable text selection and scrolling
-        document.body.style.userSelect = '';
-        document.body.style.touchAction = '';
-        document.body.style.overflow = '';
+
+        isDragging = true;
+        currentHand = hand;
+
+        // Remove any existing transitions
+        hand.classList.remove('smooth-transition');
+        hand.classList.add('no-transition');
+
+        // Get initial angles
+        dragStartAngle = calculateAngle(hand, e);
+        handStartAngle = getCurrentRotation(hand);
+        lastAngle = handStartAngle;
+
+        // During dragging
+        document.body.classList.add('body-dragging');
+        currentHand.classList.add('hand-dragging')
     }
 
-    // Add event listeners to hands with improved touch handling
+    // Enhanced drag handling with smooth animation
+    function handleDragging(e) {
+        if (!isDragging || !currentHand) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Cancel any existing animation frame
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+        }
+
+        // Calculate new angle
+        const currentPointerAngle = calculateAngle(currentHand, e);
+        const angleDiff = getAngleDifference(dragStartAngle, currentPointerAngle);
+        let newAngle = handStartAngle + angleDiff;
+
+        // Normalize angle
+        newAngle = (newAngle + 360) % 360;
+
+        // Smooth interpolation for ultra-smooth movement
+        const smoothingFactor = 0.8;
+        const interpolatedAngle = lastAngle + (newAngle - lastAngle) * smoothingFactor;
+
+        // Use requestAnimationFrame for smooth updates
+        animationFrame = requestAnimationFrame(() => {
+            currentHand.style.transform = `rotate(${interpolatedAngle}deg)`;
+            lastAngle = interpolatedAngle;
+        });
+    }
+
+    // Enhanced drag stop with snapping
+    function stopDragging(e) {
+        if (!isDragging || !currentHand) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Cancel animation frame
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+
+        // Get final angle and apply smart snapping
+        const finalAngle = getCurrentRotation(currentHand);
+        let snappedAngle;
+
+        if (currentHand === minuteHand) {
+            // Snap minute hand to nearest 5-minute mark (30-degree intervals)
+            snappedAngle = Math.round(finalAngle / 30) * 30;
+        } else {
+            // Snap hour hand to nearest hour mark with finer precision
+            snappedAngle = Math.round(finalAngle / 30) * 30;
+        }
+
+        // Smooth transition to snapped position
+        currentHand.classList.add('smooth-transition');
+        currentHand.style.transform = `rotate(${snappedAngle}deg)`;
+
+        // Remove visual feedback
+        currentHand.style.cursor = 'grab';
+        currentHand.style.filter = 'none';
+
+        // Clean up
+        setTimeout(() => {
+            currentHand.classList.remove('smooth-transition');
+            isDragging = false;
+            currentHand = null;
+
+            // Re-enable scrolling and selection
+            document.body.style.userSelect = '';
+            document.body.style.touchAction = '';
+            document.body.style.overflow = '';
+        }, 200);
+
+
+    }
+
+    // Enhanced hand styling and event listeners
     [hourHand, minuteHand].forEach((hand) => {
-        // Improve hand styling for better touch feedback
+        // Add class for CSS targeting
+        hand.classList.add('clock-hand');
+
+        // Improve hand styling
         hand.style.cursor = 'grab';
-        hand.style.transition = 'transform 0.1s ease-out';
-        
+        hand.style.transformOrigin = 'center bottom';
+        hand.style.willChange = 'transform';
+
         // Mouse events
         hand.addEventListener("mousedown", function (e) {
             startDragging(e, hand);
         });
 
-        // Touch events with passive: false to allow preventDefault
+        // Touch events
         hand.addEventListener("touchstart", function (e) {
             startDragging(e, hand);
         }, { passive: false });
-    });
 
-    // Global event listeners for drag handling
-    // Mouse events
-    document.addEventListener("mousemove", handleDragging);
-    document.addEventListener("mouseup", stopDragging);
-
-    // Touch events with passive: false to prevent scrolling
-    document.addEventListener("touchmove", handleDragging, { passive: false });
-    document.addEventListener("touchend", stopDragging, { passive: false });
-    document.addEventListener("touchcancel", stopDragging, { passive: false });
-
-    // Prevent context menu on long press for hands
-    [hourHand, minuteHand].forEach((hand) => {
-        hand.addEventListener("contextmenu", function(e) {
+        // Prevent context menu
+        hand.addEventListener("contextmenu", function (e) {
             e.preventDefault();
         });
     });
 
-    // Additional touch improvements - prevent zoom and other gestures
-    document.addEventListener('gesturestart', function(e) {
-        e.preventDefault();
+    // Global event listeners
+    document.addEventListener("mousemove", handleDragging, { passive: false });
+    document.addEventListener("mouseup", stopDragging, { passive: false });
+    document.addEventListener("touchmove", handleDragging, { passive: false });
+    document.addEventListener("touchend", stopDragging, { passive: false });
+    document.addEventListener("touchcancel", stopDragging, { passive: false });
+
+    // Prevent gesture events
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(eventType => {
+        document.addEventListener(eventType, function (e) {
+            e.preventDefault();
+        });
     });
 
-    document.addEventListener('gesturechange', function(e) {
-        e.preventDefault();
-    });
-
-    document.addEventListener('gestureend', function(e) {
-        e.preventDefault();
-    });
-
-    // Snap hands to nearest valid position
+    // ENHANCED ANSWER CHECKING WITH BETTER TOLERANCE
     function snapHandsToValidPositions() {
-        // Get current rotations
-        const hourStyle = window.getComputedStyle(hourHand);
-        const minuteStyle = window.getComputedStyle(minuteHand);
+        const hourRotation = getCurrentRotation(hourHand);
+        const minuteRotation = getCurrentRotation(minuteHand);
 
-        const hourTransform = hourStyle.getPropertyValue("transform");
-        const minuteTransform = minuteStyle.getPropertyValue("transform");
-
-        const hourMatrix = new DOMMatrix(hourTransform);
-        const minuteMatrix = new DOMMatrix(minuteTransform);
-
-        let hourRotation =
-            Math.atan2(hourMatrix.b, hourMatrix.a) * (180 / Math.PI);
-        let minuteRotation =
-            Math.atan2(minuteMatrix.b, minuteMatrix.a) * (180 / Math.PI);
-
-        // Normalize angles to 0-360 range
-        hourRotation = ((hourRotation % 360) + 360) % 360;
-        minuteRotation = ((minuteRotation % 360) + 360) % 360;
-
-        // Get hour and minute from rotations
+        // Convert rotations to time with better precision
         const hour = Math.round(hourRotation / 30) % 12 || 12;
         const minute = Math.round(minuteRotation / 6) % 60;
 
-        return { hour, minute };
+        return { hour, minute, hourRotation, minuteRotation };
     }
 
-    // Create shake animation on the clock
-    function shakeClock() {
-      
-        clock.classList.add("shake");
-
-        // Remove the class after animation completes
-        setTimeout(() => {
-            clock.classList.remove("shake");
-        }, 600);
-    }
-
-    // Show feedback overlay
-    function showFeedback(message, isCorrect, showCorrectAns = false) {
-        feedbackElement.textContent = message;
-
-        // Set color based on correctness
-        if (isCorrect) {
-            feedbackElement.style.backgroundColor = "rgba(34, 197, 94, 0.9)"; // Green background for correct
-            feedbackElement.style.color = "white";
-        }
-        else if (showCorrectAns) {
-            feedbackElement.style.backgroundColor = "rgba(58, 110, 208, 0.9)"; // Blue background for correct answer display
-            feedbackElement.style.color = "white";
-        }
-        else {
-            feedbackElement.style.backgroundColor = "rgba(239, 68, 68, 0.9)"; // Red background for incorrect
-            feedbackElement.style.color = "white";
-        }
-
-        // Show feedback
-        feedbackElement.style.opacity = "1";
-
-        // For correct answers, hide after 2 seconds
-        if (isCorrect) {
-            setTimeout(() => {
-                feedbackElement.style.opacity = "0";
-            }, 2000);
-        }
-        // For incorrect answers, message will be updated after showing correct time
-    }
-
-    // Check answer
+    // Enhanced answer checking with flexible tolerance
     function checkAnswer() {
         const userTime = snapHandsToValidPositions();
 
-        // Calculate hour position considering minutes
-        let targetHourPosition = currentTargetHour;
-        if (targetHourPosition === 12) targetHourPosition = 0;
-        targetHourPosition = targetHourPosition + currentTargetMinute / 60;
+        // Calculate target positions
+        const targetHourAngle = (currentTargetHour % 12) * 30 + currentTargetMinute * 0.5;
+        const targetMinuteAngle = currentTargetMinute * 6;
 
-        let userHourPosition = userTime.hour;
-        if (userHourPosition === 12) userHourPosition = 0;
-        userHourPosition = userHourPosition + userTime.minute / 60;
+        // Calculate hour position tolerance (more flexible)
+        const hourAngleDiff = Math.abs(getAngleDifference(targetHourAngle, userTime.hourRotation));
+        const minuteAngleDiff = Math.abs(getAngleDifference(targetMinuteAngle, userTime.minuteRotation));
 
-        // Allow for some tolerance in the hour hand position
-        const hourTolerance = 0.25; // 15 minutes tolerance
+        // Enhanced tolerance system
+        const HOUR_TOLERANCE = 20; // degrees (about 40 minutes worth)
+        const MINUTE_TOLERANCE = 15; // degrees (2.5 minutes worth)
 
-        // Check if the answer is correct
-        const isHourCorrect =
-            Math.abs(targetHourPosition - userHourPosition) < hourTolerance ||
-            Math.abs(targetHourPosition - userHourPosition) > 11.75;
-        const isMinuteCorrect = currentTargetMinute === userTime.minute;
+        const isHourCorrect = hourAngleDiff <= HOUR_TOLERANCE;
+        const isMinuteCorrect = minuteAngleDiff <= MINUTE_TOLERANCE;
 
-        const isCorrect = isHourCorrect && isMinuteCorrect;
+        // Alternative check: exact time matching with minute tolerance
+        const hourMatch = Math.abs(currentTargetHour - userTime.hour) <= 0 ||
+            Math.abs(currentTargetHour - userTime.hour) >= 11;
+        const minuteDiff = Math.abs(currentTargetMinute - userTime.minute);
+        const minuteMatch = minuteDiff <= 5 || minuteDiff >= 55; // 5-minute tolerance
 
-        // Disable next challenge button during animations
+        const isCorrect = (isHourCorrect && isMinuteCorrect) || (hourMatch && minuteMatch);
+
+        console.log('Answer check:', {
+            target: { hour: currentTargetHour, minute: currentTargetMinute },
+            user: userTime,
+            angles: {
+                targetHour: targetHourAngle,
+                targetMinute: targetMinuteAngle,
+                userHour: userTime.hourRotation,
+                userMinute: userTime.minuteRotation
+            },
+            differences: { hour: hourAngleDiff, minute: minuteAngleDiff },
+            correct: isCorrect
+        });
+
+        // Disable buttons during animations
         nextChallengeBtn.style.display = "none";
         checkAnswerBtn.style.display = "none";
 
@@ -545,8 +409,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentTargetHour,
                 currentTargetMinute
             )}.`, true);
-            
-            clock.style.display='none'
+
+            clock.style.display = 'none';
             correctAnswers++;
             happyAnimationContainer.style.display = "block";
             happyAnimation.stop();
@@ -556,105 +420,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 "complete",
                 function () {
                     happyAnimationContainer.style.display = "none";
-                    clock.style.display='block';
+                    clock.style.display = 'block';
 
-                    // Only enable next challenge button after animation completes
                     if (currentChallenge < totalChallenges - 1) {
                         nextChallengeBtn.style.display = "inline-block";
                     } else {
-                        // Show results
-                        setTimeout(() => showResults(), 1000);
+                        showResults()
                     }
                 },
                 { once: true }
             );
         } else {
             showFeedback("Oops! You got it wrong.", false);
-            clock.style.display='none'
+            clock.style.display = 'none';
             sadAnimationContainer.style.display = "block";
             sadAnimation.stop();
             sadAnimation.goToAndPlay(0, true);
 
             sadAnimation.addEventListener("complete", function () {
                 sadAnimationContainer.style.display = "none";
-                clock.style.display='block';    
-                // Begin shake animation
+                clock.style.display = 'block';
+
                 shakeClock();
 
-                // After the shake animation, show the correct time on the clock
                 setTimeout(() => {
-                    // Calculate the correct angles for hour and minute hands
-                    const hourAngle =
-                        (currentTargetHour % 12) * 30 + currentTargetMinute * 0.5; // Each hour is 30 degrees, and minute adds small adjustment
-                    const minuteAngle = currentTargetMinute * 6; // Each minute is 6 degrees
+                    const hourAngle = (currentTargetHour % 12) * 30 + currentTargetMinute * 0.5;
+                    const minuteAngle = currentTargetMinute * 6;
 
-                    // Animate the hands to the correct positions
                     animateHandToPosition(hourHand, hourAngle);
                     animateHandToPosition(minuteHand, minuteAngle);
 
-                    // Update feedback to show correct answer message
                     setTimeout(() => {
                         showFeedback(`This is the correct answer`, false, true);
 
-                        // Wait for the user to see the correct answer before allowing to continue
                         setTimeout(() => {
                             feedbackElement.style.opacity = "0";
-                            // Only show next challenge button after everything is complete
                             if (currentChallenge < totalChallenges - 1) {
                                 nextChallengeBtn.style.display = "inline-block";
                             } else {
-                                // Show results
                                 setTimeout(() => showResults(), 1000);
                             }
                         }, 3000);
-                    }, 800); // Show message after the hands have animated to correct position
-                }, 700); // Start after shake animation completes
-
-            })
-        }
-
-        // Function to animate a hand to the correct position
-        function animateHandToPosition(hand, targetAngle) {
-            // Get current rotation
-            const style = window.getComputedStyle(hand);
-            const transform = style.getPropertyValue("transform");
-            const matrix = new DOMMatrix(transform);
-            let currentAngle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
-
-            // Normalize angles
-            currentAngle = ((currentAngle % 360) + 360) % 360;
-            targetAngle = ((targetAngle % 360) + 360) % 360;
-
-            // Determine the shortest direction to rotate
-            let angleDiff = targetAngle - currentAngle;
-            if (Math.abs(angleDiff) > 180) {
-                if (angleDiff > 0) {
-                    angleDiff -= 360;
-                } else {
-                    angleDiff += 360;
-                }
-            }
-
-            // Smooth animation to target angle
-            const startTime = performance.now();
-            const duration = 800; // 800ms animation
-
-            function updateHandPosition(time) {
-                const elapsed = time - startTime;
-                if (elapsed < duration) {
-                    const progress = elapsed / duration;
-                    // Ease-out function for smoother ending
-                    const easeOut = 1 - Math.pow(1 - progress, 2);
-                    const newAngle = currentAngle + angleDiff * easeOut;
-                    hand.style.transform = `rotate(${newAngle}deg)`;
-                    requestAnimationFrame(updateHandPosition);
-                } else {
-                    // Ensure we land exactly on target
-                    hand.style.transform = `rotate(${targetAngle}deg)`;
-                }
-            }
-
-            requestAnimationFrame(updateHandPosition);
+                    }, 800);
+                }, 700);
+            }, { once: true });
         }
 
         // Update progress dots
@@ -663,10 +472,70 @@ document.addEventListener("DOMContentLoaded", function () {
         progressDots[currentChallenge].classList.add(
             isCorrect ? "correct" : "incorrect"
         );
-
-        // Note: Button display and next challenge logic is now handled in the animation complete handlers above
     }
 
+    // Create shake animation on the clock
+    function shakeClock() {
+        clock.classList.add("shake");
+        setTimeout(() => {
+            clock.classList.remove("shake");
+        }, 600);
+    }
+
+    // Show feedback overlay
+    function showFeedback(message, isCorrect, showCorrectAns = false) {
+        feedbackElement.textContent = message;
+
+        if (isCorrect) {
+            feedbackElement.style.backgroundColor = "rgba(34, 197, 94, 0.9)";
+            feedbackElement.style.color = "white";
+        } else if (showCorrectAns) {
+            feedbackElement.style.backgroundColor = "rgba(58, 110, 208, 0.9)";
+            feedbackElement.style.color = "white";
+        } else {
+            feedbackElement.style.backgroundColor = "rgba(239, 68, 68, 0.9)";
+            feedbackElement.style.color = "white";
+        }
+
+        feedbackElement.style.opacity = "1";
+
+        if (isCorrect) {
+            setTimeout(() => {
+                feedbackElement.style.opacity = "0";
+            }, 2000);
+        }
+    }
+
+    // Enhanced hand animation
+    function animateHandToPosition(hand, targetAngle) {
+        const currentAngle = getCurrentRotation(hand);
+
+        // Calculate shortest path (account for circular nature)
+        let angleDiff = ((targetAngle - currentAngle + 180) % 360) - 180;
+        angleDiff = angleDiff < -180 ? angleDiff + 360 : angleDiff;
+
+        const startTime = performance.now();
+        const duration = 800; // Reduced duration for snappier animation
+
+        function updateHandPosition(time) {
+            const elapsed = time - startTime;
+            if (elapsed < duration) {
+                const progress = elapsed / duration;
+                // Smoother easing function
+                const easeOut = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const newAngle = currentAngle + angleDiff * easeOut;
+                hand.style.transform = `rotate(${newAngle}deg)`;
+                requestAnimationFrame(updateHandPosition);
+            } else {
+                hand.style.transform = `rotate(${targetAngle}deg)`;
+            }
+        }
+
+        requestAnimationFrame(updateHandPosition);
+    }
     // Show results
     function showResults() {
         gameScreen.style.display = "none";
@@ -682,11 +551,9 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (percentage >= 80) {
             message = "Great job! You're really good at telling time!";
         } else if (percentage >= 60) {
-            message =
-                "Good effort! Keep practicing to improve your time-telling skills.";
+            message = "Good effort! Keep practicing to improve your time-telling skills.";
         } else {
-            message =
-                "Keep practicing! Time-telling takes practice, and you'll get better.";
+            message = "Keep practicing! Time-telling takes practice, and you'll get better.";
         }
 
         completionMessage.textContent = message;
@@ -721,7 +588,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("loading-screen").style.display = "flex";
         simulateLoading();
 
-        // Start game after loading animation
         setTimeout(function () {
             generateChallenges();
             setupChallenge();
@@ -740,11 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
         resultsScreen.style.display = "none";
         gameScreen.style.display = "block";
 
-        // Reset game state
         currentChallenge = 0;
         correctAnswers = 0;
 
-        // Generate new challenges and start
         generateChallenges();
         setupChallenge();
     });
